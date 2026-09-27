@@ -1,0 +1,74 @@
+name: tracking_simple
+description: "mardalan - Monitoring Aktivitas dan Rute Petugas Lapangan"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI Components
+  cupertino_icons: ^1.0.2
+  flutter_launcher_icons: ^0.13.1
+  
+  # Location & GPS
+  geolocator: ^9.0.2
+  location: ^8.0.1
+  permission_handler: ^11.3.1
+  
+  # State Management & Storage
+  provider: ^6.0.5
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.1
+  sqflite: ^2.3.0
+  path: ^1.8.35
+  
+  # HTTP & Networking
+  http: ^1.1.0
+  dio: ^5.3.2
+  connectivity_plus: ^4.0.2
+  
+  # Google Services & Sheets
+  googleapis: ^11.4.0
+  googleapis_auth: ^1.4.1
+  google_sign_in: ^6.1.5
+  
+  # Image & Camera
+  image_picker: ^1.0.7
+  camera: ^0.10.5+9
+  
+  # Background Services
+  workmanager: ^0.9.0+3
+  flutter_background_service: ^5.0.5
+  flutter_local_notifications: ^17.2.3
+  
+  # Map Components
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.1
+  
+  # Utils
+  intl: ^0.18.1
+  uuid: ^4.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/logo.png"

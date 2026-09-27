@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mardalan Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --ink: #172033;
+            --muted: #697386;
+            --line: #dde3ea;
+            --panel: #ffffff;
+            --page: #f4f7fb;
+            --primary: #175cd3;
+            --primary-soft: #e8f0fe;
+            --green: #168a4a;
+            --orange: #c77700;
+            --red: #c73535;
+            --teal: #087a7a;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--ink);
+            background: var(--page);
+        }
+
+        .shell {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: #101828;
+            color: #eef4ff;
+            padding: 18px 14px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            margin-bottom: 18px;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: #ff7a1a;
+            color: white;
+            font-size: 20px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 21px;
+            letter-spacing: 0;
+        }
+
+        .brand p {
+            margin: 2px 0 0;
+            color: #b7c4d7;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .nav-section {
+            margin: 18px 0;
+        }
+
+        .nav-title {
+            color: #98a2b3;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0 10px 8px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: #d0d5dd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: #1d2939;
+            color: white;
+        }
+
+        .nav-btn i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .main {
+            padding: 22px;
+            min-width: 0;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .topbar p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 13px;
+        }
+
+        .content-view { display: none; }
+        .content-view.active { display: block; }
+
+        .grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .stats {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 14px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .stat .label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .stat .value {
+            margin-top: 5px;
+            font-size: 27px;
+            font-weight: 800;
+        }
+
+        .stat i {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            color: var(--primary);
+            background: var(--primary-soft);
+            font-size: 18px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .field {
+            display: grid;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            padding: 9px 10px;
+            font: inherit;
+            background: white;
+            color: var(--ink);
+        }
+
+        textarea {
+            min-height: 78px;
+            resize: vertical;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 7px;
+            padding: 10px 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn.light {
+            background: #eef2f6;
+            color: var(--ink);
+        }
+
+        .btn.green {
+            background: var(--green);
+            color: white;
+        }
+
+        .btn.red {
+            background: var(--red);
+            color: white;
+        }
+
+        .btn.full {
+            width: 100%;
+        }
+
+        .map-layout {
+            display: grid;
+            grid-template-columns: 1fr 330px;
+            gap: 14px;
+        }
+
+        #map {
+            height: 590px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .panel-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .panel-title h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+
+        th, td {
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #465467;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr:last-child td { border-bottom: 0; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge.green { background: #e8f7ef; color: var(--green); }
+        .badge.orange { background: #fff4df; color: var(--orange); }
+        .badge.red { background: #ffe9e9; color: var(--red); }
+        .badge.blue { background: var(--primary-soft); color: var(--primary); }
+        .badge.gray { background: #eef2f6; color: #475467; }
+
+        .list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .list-item {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 11px;
+            display: grid;
+            gap: 4px;
+            background: white;
+        }
+
+        .list-item strong {
+            font-size: 13px;
+        }
+
+        .list-item span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 14px;
+        }
+
+        .note {
+            border-left: 4px solid var(--primary);
+            background: var(--primary-soft);
+            padding: 12px;
+            border-radius: 7px;
+            color: #18407a;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            background: rgba(16, 24, 40, 0.5);
+            padding: 18px;
+            z-index: 999;
+        }
+
+        .modal.active { display: grid; }
+
+        .modal-box {
+            width: min(620px, 100%);
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            box-shadow: 0 20px 60px rgba(16, 24, 40, 0.2);
+            padding: 18px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 1080px) {
+            .shell { grid-template-columns: 1fr; }
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+            .map-layout, .split, .stats {
+                grid-template-columns: 1fr;
+            }
+            #map { height: 440px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark"><i class="fas fa-location-dot"></i></div>
+                <div>
+                    <h1>mardalan</h1>
+                    <p>Monitoring Aktivitas dan Rute Petugas Lapangan</p>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Dashboard Monitoring</div>
+                <button class="nav-btn active" data-view="dashboard-live"><i class="fas fa-satellite-dish"></i> Dashboard Live</button>
+                <button class="nav-btn" data-view="riwayat-jejak"><i class="fas fa-route"></i> Riwayat Jejak Petugas</button>
+                <button class="nav-btn" data-view="riwayat-absensi"><i class="fas fa-calendar-check"></i> Riwayat Absensi</button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Master Data</div>
+                <button class="nav-btn" data-view="manajemen-pengguna"><i class="fas fa-users-gear"></i> Manajemen Pengguna</button>
+                <button class="nav-btn" data-view="wilayah-tugas"><i class="fas fa-map-location-dot"></i> Wilayah Tugas</button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Admin</div>
+                <button class="nav-btn" data-view="titik-sasaran"><i class="fas fa-bullseye"></i> Titik Sasaran</button>
+                <button class="nav-btn" data-view="hak-akses"><i class="fas fa-user-shield"></i> Hak Akses (Roles)</button>
+                <button class="nav-btn" data-view="pengaturan-sistem"><i class="fas fa-sliders"></i> Pengaturan Sistem</button>
+                <button class="nav-btn" data-view="log-aktivitas"><i class="fas fa-clipboard-list"></i> Log Aktivitas</button>
+            </div>
+
+            <div class="nav-section">
+                <button class="nav-btn" id="logout-btn"><i class="fas fa-right-from-bracket"></i> Keluar</button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div>
+                    <h2 id="page-title">Dashboard Live</h2>
+                    <p id="page-subtitle">Pantau posisi terakhir, status tracking, dan progres petugas lapangan secara real-time.</p>
+                </div>
+                <div class="user-chip">
+                    <i class="fas fa-building"></i>
+                    <span>Admin Kab/Kot - BPS Labuhanbatu Utara</span>
+                </div>
+            </div>
+
+            <section class="content-view active" id="dashboard-live">
+                <div class="grid stats">
+                    <div class="card stat"><div><div class="label">Petugas Terdaftar</div><div class="value" id="stat-officers">0</div></div><i class="fas fa-users"></i></div>
+                    <div class="card stat"><div><div class="label">Petugas Live</div><div class="value" id="stat-active">0</div></div><i class="fas fa-user-check"></i></div>
+                    <div class="card stat"><div><div class="label">Survei Berjalan</div><div class="value" id="stat-ongoing">0</div></div><i class="fas fa-person-walking"></i></div>
+                    <div class="card stat"><div><div class="label">Titik Tracking</div><div class="value" id="stat-points">0</div></div><i class="fas fa-map-pin"></i></div>
+                </div>
+
+                <div class="toolbar card">
+                    <div class="field">
+                        <label>Kecamatan</label>
+                        <select id="filter-kecamatan"><option value="">Semua Kecamatan</option></select>
+                    </div>
+                    <div class="field">
+                        <label>Desa</label>
+                        <select id="filter-desa"><option value="">Semua Desa</option></select>
+                    </div>
+                    <div class="field">
+                        <label>Jenis Sensus/Survei</label>
+                        <select id="filter-survei"><option value="">Semua Jenis</option></select>
+                    </div>
+                    <div class="field">
+                        <label>Petugas</label>
+                        <select id="filter-petugas"><option value="">Semua Petugas</option></select>
+                    </div>
+                    <button class="btn primary" id="refresh-live"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+
+                <div class="map-layout">
+                    <div class="card">
+                        <div class="panel-title">
+                            <h3>Peta Live Petugas</h3>
+                            <span class="badge green"><i class="fas fa-circle"></i>&nbsp; LIVE</span>
+                        </div>
+                        <div id="map"></div>
+                    </div>
+                    <div class="card">
+                        <div class="panel-title">
+                            <h3>Petugas Aktif</h3>
+                            <span class="badge blue" id="active-count">0 aktif</span>
+                        </div>
+                        <div class="list" id="active-officer-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="riwayat-jejak">
+                <div class="card">
+                    <div class="panel-title">
+                        <h3>Riwayat Jejak Petugas</h3>
+                        <button class="btn light" id="export-jejak"><i class="fas fa-file-excel"></i> Export</button>
+                    </div>
+                    <div class="toolbar">
+                        <div class="field"><label>Dari Tanggal</label><input type="date" id="track-from"></div>
+                        <div class="field"><label>Sampai Tanggal</label><input type="date" id="track-to"></div>
+                        <div class="field"><label>Petugas</label><select id="track-officer"><option value="">Semua Petugas</option></select></div>
+                        <button class="btn primary" id="load-history"><i class="fas fa-search"></i> Tampilkan</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Waktu</th><th>Petugas</th><th>Survei</th><th>Kecamatan</th><th>Desa</th><th>Koordinat</th><th>Akurasi</th></tr></thead>
+                            <tbody id="tracking-history-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="riwayat-absensi">
+                <div class="card">
+                    <div class="panel-title">
+                        <h3>Riwayat Absensi</h3>
+                        <span class="badge gray">Demo data</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Tanggal</th><th>Petugas</th><th>Check In</th><th>Check Out</th><th>Lokasi Masuk</th><th>Status</th></tr></thead>
+                            <tbody id="attendance-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="manajemen-pengguna">
+                <div class="split">
+                    <div class="card">
+                        <div class="panel-title">
+                            <h3>Approval Akun Petugas</h3>
+                            <span class="badge orange">Wajib approval Admin Kab/Kot</span>
+                        </div>
+                        <div class="note">
+                            Petugas mendaftar melalui aplikasi mardalan Android. Akun belum dapat dipakai penuh sebelum Admin Kab/Kot melakukan approval.
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Nama</th><th>Email</th><th>NIK/ID</th><th>Status</th><th>Aksi</th></tr></thead>
+                                <tbody id="approval-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="panel-title"><h3>Tambah Pengguna oleh Admin</h3></div>
+                        <div class="grid">
+                            <div class="field"><label>Nama Petugas</label><input id="new-user-name" placeholder="Nama lengkap"></div>
+                            <div class="field"><label>Email</label><input id="new-user-email" placeholder="email@bps.go.id"></div>
+                            <div class="field"><label>NIK/ID Petugas</label><input id="new-user-id" placeholder="PET031"></div>
+                            <div class="field"><label>Role</label><select id="new-user-role"><option>Petugas</option><option>Admin Kab/Kot</option><option>Supervisor</option></select></div>
+                            <button class="btn primary full" id="add-user"><i class="fas fa-user-plus"></i> Tambahkan Pengguna</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="wilayah-tugas">
+                <div class="card">
+                    <div class="panel-title">
+                        <div>
+                            <h3>Wilayah Tugas</h3>
+                            <p style="margin: 4px 0 0; color: var(--muted); font-size: 13px;">Alokasi hanya dapat dilakukan jika petugas sudah terdaftar sebagai pengguna.</p>
+                        </div>
+                        <button class="btn primary" id="open-assignment"><i class="fas fa-plus"></i> Tambah Penugasan</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Jenis Sensus/Survei</th><th>Petugas</th><th>Kecamatan</th><th>Desa</th><th>SLS</th><th>Status</th></tr></thead>
+                            <tbody id="assignment-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="titik-sasaran">
+                <div class="card">
+                    <div class="panel-title"><h3>Titik Sasaran</h3><button class="btn primary"><i class="fas fa-plus"></i> Tambah Titik</button></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>ID Sasaran</th><th>Nama/Label</th><th>Kecamatan</th><th>Desa</th><th>SLS</th><th>Koordinat</th><th>Status</th></tr></thead>
+                            <tbody id="target-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="hak-akses">
+                <div class="card">
+                    <div class="panel-title"><h3>Hak Akses (Roles)</h3></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Role</th><th>Monitoring</th><th>Master Data</th><th>Admin</th><th>Status</th></tr></thead>
+                            <tbody id="roles-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="pengaturan-sistem">
+                <div class="card">
+                    <div class="panel-title"><h3>Pengaturan Sistem</h3></div>
+                    <div class="split">
+                        <div class="grid">
+                            <div class="field"><label>Interval Tracking Background</label><select><option>45 detik</option><option>60 detik</option><option>120 detik</option></select></div>
+                            <div class="field"><label>Sinkronisasi Otomatis</label><select><option>Aktif</option><option>Nonaktif</option></select></div>
+                            <div class="field"><label>Batas Akurasi GPS Maksimal</label><input value="30 meter"></div>
+                            <button class="btn primary"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+                        </div>
+                        <div class="note">Pengaturan produksi harus diselaraskan dengan backend API, kebijakan background location Android, dan aturan operasional BPS daerah.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-view" id="log-aktivitas">
+                <div class="card">
+                    <div class="panel-title"><h3>Log Aktivitas</h3></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aktivitas</th><th>Modul</th><th>IP/Perangkat</th></tr></thead>
+                            <tbody id="activity-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal" id="assignment-modal">
+        <div class="modal-box">
+            <div class="panel-title">
+                <h3>Tambah Penugasan Wilayah</h3>
+                <button class="btn light" id="close-assignment"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="grid">
+                <div class="field"><label>Jenis Sensus/Survei</label><select id="assign-survey"></select></div>
+                <div class="field"><label>Memilih Petugas</label><select id="assign-officer"></select></div>
+                <div class="field"><label>Memilih Kecamatan</label><select id="assign-kecamatan"></select></div>
+                <div class="field"><label>Memilih Desa</label><select id="assign-desa"></select></div>
+                <div class="field"><label>SLS</label><input id="assign-sls" placeholder="Contoh: 001B"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn light" id="cancel-assignment">Batal</button>
+                <button class="btn primary" id="save-assignment"><i class="fas fa-save"></i> Simpan Penugasan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const pageMeta = {
+            'dashboard-live': ['Dashboard Live', 'Pantau posisi terakhir, status tracking, dan progres petugas lapangan secara real-time.'],
+            'riwayat-jejak': ['Riwayat Jejak Petugas', 'Telusuri riwayat tracking berdasarkan tanggal, petugas, survei, dan wilayah.'],
+            'manajemen-pengguna': ['Manajemen Pengguna', 'Kelola pendaftaran petugas, approval akun, dan penambahan pengguna oleh Admin Kab/Kot.'],
+            'wilayah-tugas': ['Wilayah Tugas', 'Alokasikan jenis sensus/survei, petugas, kecamatan, desa, dan SLS.'],
+            'titik-sasaran': ['Titik Sasaran', 'Kelola titik sasaran/prelist yang akan menjadi referensi kerja petugas.'],
+            'hak-akses': ['Hak Akses (Roles)', 'Atur role dan kewenangan pengguna dashboard.'],
+            'pengaturan-sistem': ['Pengaturan Sistem', 'Kelola parameter tracking, sinkronisasi, dan batas akurasi GPS.'],
+            'log-aktivitas': ['Log Aktivitas', 'Audit aktivitas admin dan perubahan data.']
+        };
+
+        let map;
+        let mapLayers = [];
+        let officers = [];
+        let kecamatanData = {};
+        let surveyTypes = [];
+        let assignments = [
+            ['Sensus Penduduk', 'PET001 - Petugas Survei 1', 'Kualuh Hulu', 'Aek Nabara', '001A', 'Aktif'],
+            ['Survei Ekonomi', 'PET003 - Petugas Survei 3', 'Kualuh Hilir', 'Sei Balai', '002B', 'Aktif'],
+            ['Sensus Pertanian', 'PET005 - Petugas Survei 5', 'Marbau', 'Marbau', '004C', 'Aktif']
+        ];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            setupNavigation();
+            initDates();
+            await loadMasterData();
+            initMap();
+            renderStaticTables();
+            await refreshLive();
+            await loadTrackingHistory();
+            bindActions();
+        });
+
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const view = btn.dataset.view;
+                    document.querySelectorAll('.nav-btn[data-view]').forEach(item => item.classList.remove('active'));
+                    document.querySelectorAll('.content-view').forEach(item => item.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(view).classList.add('active');
+                    document.getElementById('page-title').textContent = pageMeta[view][0];
+                    document.getElementById('page-subtitle').textContent = pageMeta[view][1];
+                    if (view === 'dashboard-live' && map) setTimeout(() => map.invalidateSize(), 120);
+                });
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                alert('Keluar dari dashboard mardalan.');
+            });
+        }
+
+        function initDates() {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('track-to').value = today.toISOString().slice(0, 10);
+            document.getElementById('track-from').value = weekAgo.toISOString().slice(0, 10);
+        }
+
+        async function loadMasterData() {
+            const [officerRes, kecRes, surveyRes] = await Promise.all([
+                fetch('/api/officers'),
+                fetch('/api/kecamatan'),
+                fetch('/api/survey-types')
+            ]);
+
+            officers = await officerRes.json();
+            kecamatanData = await kecRes.json();
+            surveyTypes = await surveyRes.json();
+
+            fillSelect('filter-petugas', officers.map(o => [o.id, `${o.id} - ${o.name}`]), 'Semua Petugas');
+            fillSelect('track-officer', officers.map(o => [o.id, `${o.id} - ${o.name}`]), 'Semua Petugas');
+            fillSelect('assign-officer', officers.map(o => [o.id, `${o.id} - ${o.name}`]));
+            fillSelect('filter-kecamatan', Object.keys(kecamatanData).map(k => [k, k]), 'Semua Kecamatan');
+            fillSelect('assign-kecamatan', Object.keys(kecamatanData).map(k => [k, k]));
+            fillSelect('filter-survei', surveyTypes.map(s => [s, s]), 'Semua Jenis');
+            fillSelect('assign-survey', surveyTypes.map(s => [s, s]));
+
+            updateDesaSelect('filter-kecamatan', 'filter-desa', true);
+            updateDesaSelect('assign-kecamatan', 'assign-desa', false);
+            document.getElementById('filter-kecamatan').addEventListener('change', () => updateDesaSelect('filter-kecamatan', 'filter-desa', true));
+            document.getElementById('assign-kecamatan').addEventListener('change', () => updateDesaSelect('assign-kecamatan', 'assign-desa', false));
+        }
+
+        function fillSelect(id, rows, placeholder = null) {
+            const select = document.getElementById(id);
+            select.innerHTML = placeholder ? `<option value="">${placeholder}</option>` : '';
+            rows.forEach(([value, label]) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                select.appendChild(option);
+            });
+        }
+
+        function updateDesaSelect(kecamatanId, desaId, includeAll) {
+            const kecamatan = document.getElementById(kecamatanId).value || Object.keys(kecamatanData)[0];
+            const rows = (kecamatanData[kecamatan]?.desa || []).map(d => [d, d]);
+            fillSelect(desaId, rows, includeAll ? 'Semua Desa' : null);
+        }
+
+        function initMap() {
+            map = L.map('map').setView([2.3274, 99.8492], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        async function refreshLive() {
+            const [statsRes, realtimeRes] = await Promise.all([
+                fetch('/api/statistics'),
+                fetch('/api/realtime')
+            ]);
+            const stats = await statsRes.json();
+            const realtime = await realtimeRes.json();
+
+            document.getElementById('stat-officers').textContent = stats.total_officers;
+            document.getElementById('stat-active').textContent = realtime.length;
+            document.getElementById('stat-ongoing').textContent = stats.ongoing_surveys;
+            document.getElementById('stat-points').textContent = stats.total_tracking_points;
+            document.getElementById('active-count').textContent = `${realtime.length} aktif`;
+
+            renderActiveOfficers(realtime);
+            renderMap(realtime);
+        }
+
+        function renderMap(realtime) {
+            mapLayers.forEach(layer => map.removeLayer(layer));
+            mapLayers = [];
+
+            realtime.forEach(position => {
+                const marker = L.circleMarker([position.latitude, position.longitude], {
+                    radius: 9,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillColor: '#168a4a',
+                    fillOpacity: 0.9
+                }).addTo(map);
+                marker.bindPopup(`
+                    <strong>${position.officer_id}</strong><br>
+                    Survei: ${position.survey_id}<br>
+                    Kecamatan: ${position.kecamatan}<br>
+                    Akurasi: ${position.accuracy}m<br>
+                    Update: ${formatDateTime(position.timestamp)}
+                `);
+                mapLayers.push(marker);
+            });
+
+            if (realtime.length) {
+                const group = L.featureGroup(mapLayers);
+                map.fitBounds(group.getBounds().pad(0.25));
+            }
+        }
+
+        function renderActiveOfficers(realtime) {
+            const container = document.getElementById('active-officer-list');
+            container.innerHTML = realtime.map(item => `
+                <div class="list-item">
+                    <strong>${item.officer_id} <span class="badge green">Tracking</span></strong>
+                    <span>${item.kecamatan} - ${item.survey_id}</span>
+                    <span>Update ${formatDateTime(item.timestamp)} | Akurasi ${item.accuracy}m</span>
+                </div>
+            `).join('');
+        }
+
+        async function loadTrackingHistory() {
+            const params = new URLSearchParams({
+                officer_id: document.getElementById('track-officer').value,
+                date_from: document.getElementById('track-from').value,
+                date_to: document.getElementById('track-to').value
+            });
+            const response = await fetch(`/api/tracking?${params}`);
+            const rows = await response.json();
+            document.getElementById('tracking-history-body').innerHTML = rows.slice(0, 80).map(row => `
+                <tr>
+                    <td>${formatDateTime(row.timestamp)}</td>
+                    <td>${row.officer_id}</td>
+                    <td>${row.survey_id}</td>
+                    <td>${row.kecamatan || '-'}</td>
+                    <td>${row.desa || '-'}</td>
+                    <td>${Number(row.latitude).toFixed(6)}, ${Number(row.longitude).toFixed(6)}</td>
+                    <td>${row.accuracy}m</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderStaticTables() {
+            document.getElementById('attendance-body').innerHTML = officers.slice(0, 12).map((o, i) => `
+                <tr><td>${new Date().toISOString().slice(0, 10)}</td><td>${o.id} - ${o.name}</td><td>08:${String(10 + i).padStart(2, '0')}</td><td>${i % 4 === 0 ? '-' : `16:${String(20 + i).padStart(2, '0')}`}</td><td>${o.kecamatan}</td><td>${i % 4 === 0 ? '<span class="badge orange">Belum Check Out</span>' : '<span class="badge green">Lengkap</span>'}</td></tr>
+            `).join('');
+
+            document.getElementById('approval-body').innerHTML = [
+                ['Andi Pratama', 'andi.pratama@bps.go.id', 'PET031', 'Menunggu Approval'],
+                ['Rika Lestari', 'rika.lestari@bps.go.id', 'PET032', 'Menunggu Approval'],
+                ['Dian Safira', 'dian.safira@bps.go.id', 'PET033', 'Ditolak']
+            ].map(row => `
+                <tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td><span class="badge ${row[3] === 'Ditolak' ? 'red' : 'orange'}">${row[3]}</span></td><td><button class="btn green">Approve</button> <button class="btn red">Tolak</button></td></tr>
+            `).join('');
+
+            renderAssignments();
+
+            document.getElementById('target-body').innerHTML = [
+                ['SBR-001', 'Rumah Tangga A', 'Kualuh Hulu', 'Aek Nabara', '001A', '2.327400, 99.849200', 'Aktif'],
+                ['SBR-002', 'Usaha Mikro B', 'Kualuh Hilir', 'Sei Balai', '002B', '2.285000, 99.820000', 'Aktif'],
+                ['SBR-003', 'Rumah Tangga C', 'Marbau', 'Marbau', '004C', '2.420000, 99.880000', 'Perlu Validasi']
+            ].map(r => `<tr>${r.map((c, i) => `<td>${i === 6 ? `<span class="badge ${c === 'Aktif' ? 'green' : 'orange'}">${c}</span>` : c}</td>`).join('')}</tr>`).join('');
+
+            document.getElementById('roles-body').innerHTML = [
+                ['Admin Kab/Kot', 'Penuh', 'Penuh', 'Penuh', 'Aktif'],
+                ['Supervisor', 'Lihat & export', 'Wilayah tugas', 'Terbatas', 'Aktif'],
+                ['Petugas', 'Data sendiri', 'Tidak ada', 'Tidak ada', 'Aktif']
+            ].map(r => `<tr>${r.map((c, i) => `<td>${i === 4 ? `<span class="badge green">${c}</span>` : c}</td>`).join('')}</tr>`).join('');
+
+            document.getElementById('activity-body').innerHTML = [
+                ['2026-06-15 20:12', 'admin.kabkot', 'Approve akun PET031', 'Manajemen Pengguna', 'Dashboard Web'],
+                ['2026-06-15 19:58', 'admin.kabkot', 'Tambah penugasan Kualuh Hulu / 001A', 'Wilayah Tugas', 'Dashboard Web'],
+                ['2026-06-15 19:40', 'supervisor.01', 'Export riwayat jejak', 'Riwayat Jejak', 'Dashboard Web']
+            ].map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+        }
+
+        function renderAssignments() {
+            document.getElementById('assignment-body').innerHTML = assignments.map(row => `
+                <tr>
+                    <td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${row[4]}</td>
+                    <td><span class="badge green">${row[5]}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function bindActions() {
+            document.getElementById('refresh-live').addEventListener('click', refreshLive);
+            document.getElementById('load-history').addEventListener('click', loadTrackingHistory);
+            document.getElementById('export-jejak').addEventListener('click', () => window.location.href = '/api/export');
+            document.getElementById('open-assignment').addEventListener('click', () => document.getElementById('assignment-modal').classList.add('active'));
+            document.getElementById('close-assignment').addEventListener('click', closeAssignment);
+            document.getElementById('cancel-assignment').addEventListener('click', closeAssignment);
+            document.getElementById('save-assignment').addEventListener('click', saveAssignment);
+            document.getElementById('add-user').addEventListener('click', () => {
+                const name = document.getElementById('new-user-name').value || 'Pengguna baru';
+                alert(`${name} ditambahkan sebagai pengguna. Integrasikan endpoint backend untuk menyimpan permanen.`);
+            });
+        }
+
+        function closeAssignment() {
+            document.getElementById('assignment-modal').classList.remove('active');
+        }
+
+        function saveAssignment() {
+            const officerSelect = document.getElementById('assign-officer');
+            assignments.unshift([
+                document.getElementById('assign-survey').value,
+                officerSelect.options[officerSelect.selectedIndex].text,
+                document.getElementById('assign-kecamatan').value,
+                document.getElementById('assign-desa').value,
+                document.getElementById('assign-sls').value || '-',
+                'Aktif'
+            ]);
+            renderAssignments();
+            closeAssignment();
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '-';
+            return new Date(value).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+        }
+    </script>
+</body>
+</html>

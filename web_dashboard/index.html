@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Tracking Petugas Survey</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .control-group label {
+            font-weight: 500;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        select, input, button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a6fd8;
+        }
+        
+        .map-container {
+            height: calc(100vh - 200px);
+            margin: 1rem 2rem;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .stats {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .stats h3 {
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+        
+        .photo-popup {
+            text-align: center;
+        }
+        
+        .photo-popup img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .photo-info {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .legend h4 {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.3rem;
+            font-size: 0.8rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 0.5rem;
+            border-radius: 2px;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            z-index: 2000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Dashboard Admin - Tracking Petugas Survey</h1>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Petugas:</label>
+            <select id="petugasSelect">
+                <option value="">Semua Petugas</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Tanggal Dari:</label>
+            <input type="date" id="dateFrom">
+        </div>
+        
+        <div class="control-group">
+            <label>Tanggal Sampai:</label>
+            <input type="date" id="dateTo">
+        </div>
+        
+        <div class="control-group">
+            <label>Mode Tampilan:</label>
+            <select id="viewMode">
+                <option value="routes">Peta Jalur</option>
+                <option value="heatmap">Heatmap</option>
+                <option value="photos">Foto Tergeotag</option>
+            </select>
+        </div>
+        
+        <button onclick="loadData()">🔄 Refresh Data</button>
+        <button onclick="exportData()">📊 Export Excel</button>
+    </div>
+    
+    <div class="map-container">
+        <div id="map"></div>
+        
+        <div class="stats">
+            <h3>📈 Statistik</h3>
+            <div class="stat-item">
+                <span>Total Survey:</span>
+                <span id="totalSurveys">-</span>
+            </div>
+            <div class="stat-item">
+                <span>Petugas Aktif:</span>
+                <span id="activePetugas">-</span>
+            </div>
+            <div class="stat-item">
+                <span>Total Foto:</span>
+                <span id="totalPhotos">-</span>
+            </div>
+            <div class="stat-item">
+                <span>Jarak Total:</span>
+                <span id="totalDistance">-</span>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h4>🗺️ Legenda</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff4444;"></div>
+                <span>Jalur Petugas</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #44ff44;"></div>
+                <span>Titik Start</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4444ff;"></div>
+                <span>Titik End</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="loading" id="loading">
+        <h3>⏳ Memuat data...</h3>
+        <p>Mengambil data dari Google Sheets</p>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="dashboard.js"></script>
+</body>
+</html>
